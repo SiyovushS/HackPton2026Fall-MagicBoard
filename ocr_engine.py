@@ -33,8 +33,24 @@ import torch
 from PIL import Image
 from sympy.parsing.latex import parse_latex
 from transformers import AutoModelForImageTextToText, AutoProcessor, Qwen3VLForConditionalGeneration
+from transformers.utils import logging as _hf_logging
 
-MODEL = "Qwen/Qwen3-VL-8B-Instruct"
+_hf_logging.set_verbosity_error()   # hide harmless library warnings (e.g. a repeated "Kwargs passed...")
+
+MODEL = "Qwen/Qwen3-VL-8B-Instruct"                      # PyTorch backend (any OS, ~25 GB peak)
+MODEL_MLX = "mlx-community/Qwen3-VL-8B-Instruct-4bit"    # MLX backend (Apple Silicon, 4-bit, ~6 GB)
+
+
+def default_backend():
+    """MLX on Apple Silicon Macs (4x smaller, faster, as accurate in the bake-off), else PyTorch."""
+    import platform
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        try:
+            import mlx_vlm  # noqa: F401
+            return "mlx"
+        except ImportError:
+            pass
+    return "torch"
 FALLBACK_MATH_MODEL = "zai-org/GLM-OCR"  # second opinion when Qwen's math doesn't parse (~0.4 s, ~2 GB)
 PAD = 20          # white margin added around every crop before OCR
 MAX_SIDE = None   # crops are sent at full size: shrinking to 1024 px cost accuracy on long text lines.
@@ -249,12 +265,25 @@ def find_answer_blank(crop_bgr):
 
 
 class OCREngine:
-    def __init__(self, model: str = MODEL, device: str = None, math_fallback: bool = True):
+    def __init__(self, model: str = None, device: str = None, math_fallback: bool = True, backend: str = None):
+        """backend: "mlx" (Apple Silicon, 4-bit, ~6 GB) or "torch" (any OS); default picks MLX on a Mac."""
+        self.backend = backend or default_backend()
         self.device = device or pick_device()
         self.dtype = torch.float32 if self.device == "cpu" else torch.float16
-        self.processor = AutoProcessor.from_pretrained(model)
-        self.processor.tokenizer.padding_side = "left"  # needed for batched generation
-        self.model = Qwen3VLForConditionalGeneration.from_pretrained(model, dtype=self.dtype).to(self.device).eval()
+        if self.backend == "mlx":
+            import os
+            import tempfile
+            from mlx_vlm import generate, load
+            from mlx_vlm.prompt_utils import apply_chat_template
+            self._mlx_generate, self._mlx_template = generate, apply_chat_template
+            self.model, self.processor = load(model or MODEL_MLX)
+            self.config = getattr(self.model, "config", None)
+            self._tmp = os.path.join(tempfile.mkdtemp(prefix="ocr_engine_"), "crop.png")
+        else:
+            model = model or MODEL
+            self.processor = AutoProcessor.from_pretrained(model)
+            self.processor.tokenizer.padding_side = "left"  # needed for batched generation
+            self.model = Qwen3VLForConditionalGeneration.from_pretrained(model, dtype=self.dtype).to(self.device).eval()
         self.math_fallback = math_fallback
         self._glm = None  # GLM-OCR, loaded on first use (only if Qwen's math fails to parse)
         self._warm_up()
@@ -397,6 +426,15 @@ class OCREngine:
         return Image.fromarray(cv2.cvtColor(padded, cv2.COLOR_BGR2RGB))
 
     def _ask_many(self, crops, instructions, max_tokens):
+        if self.backend == "mlx":                 # mlx-vlm takes an image path; one image at a time
+            answers = []
+            for crop, instruction in zip(crops, instructions):
+                self._to_image(crop).save(self._tmp)
+                prompt = self._mlx_template(self.processor, self.config, instruction, num_images=1)
+                result = self._mlx_generate(self.model, self.processor, prompt, image=[self._tmp],
+                                            max_tokens=max_tokens, temperature=0.0, verbose=False)
+                answers.append((result.text if hasattr(result, "text") else str(result)).strip())
+            return answers
         conversations = [[{"role": "user", "content": [{"type": "image", "image": self._to_image(c)},
                                                        {"type": "text", "text": t}]}]
                          for c, t in zip(crops, instructions)]

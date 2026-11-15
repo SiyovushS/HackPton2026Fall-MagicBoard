@@ -55,7 +55,8 @@ class InkRegion:
 
 
 class NewInkTracker:
-    def __init__(self):
+    def __init__(self, all_new=False):
+        self.all_new = all_new     # True: nothing counts as already on the board (N key)
         self.reset()
 
     def reset(self):
@@ -80,6 +81,8 @@ class NewInkTracker:
             self.board = small.copy()
             self.board_kind = "white" if small.mean() > 110 else "black"
             self.baseline_ink = cv2.dilate(ink_mask(small, board=self.board_kind), np.ones((7, 7), np.uint8))
+            if self.all_new:
+                self.baseline_ink[:] = 0
             surface = board_mask(small)
             self.on_board = cv2.erode(surface, np.ones((15, 15), np.uint8)) > 0
             self.persist = np.zeros(small.shape[:2], np.float32)

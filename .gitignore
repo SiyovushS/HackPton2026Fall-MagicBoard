@@ -18,3 +18,6 @@ tests/board/pictures/
 
 # Test videos (large; keep out of git)
 recordings/
+
+# Saved artifact drawings (created while the app runs)
+artifacts/

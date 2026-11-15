@@ -47,7 +47,7 @@ def main():
                 reader.update(frame, now)
                 if reader.should_analyse(now):
                     a = reader.analyse(now)
-                    print(f"t={now:6.1f}s  analysis took {a.seconds:4.1f}s: kept {len(a.kept)}, dropped {len(a.dropped)}")
+                    area = a.region; part = (area[2] - area[0]) * (area[3] - area[1]) / (frame.shape[0] * frame.shape[1]); print(f"t={now:6.1f}s  analysis took {a.seconds:4.1f}s on {part:.0%} of the board: kept {len(a.kept)}, dropped {len(a.dropped)}")
                     for it in a.kept:
                         what = f"label {it.label!r}, {'DEFINE' if it.has_content else 'CALL'}" if it.kind == "box" else it.text
                         print(f"     keep {it.kind:10s} {it.role:12s} {what!r:40s} ({it.new_share:.0%} new)")

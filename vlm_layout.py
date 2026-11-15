@@ -23,6 +23,8 @@ List every item written or drawn ON THE BOARD as a JSON array. Each item is an o
   {"type": "text", "bbox_2d": [...], "text": "<the words>"}
   {"type": "axes", "bbox_2d": [...]}            (hand-drawn graph axes: an L shape with arrows)
 A "box" is a hand-drawn rectangle; do not also list its label or drawing as separate items.
+Axes are only the two arrows: an expression written next to the axes (the function to plot,
+e.g. x^2) is NOT part of them; list it as its own "expression" item with its own tight bbox.
 Give one item per expression or line of text. Ignore smudges, eraser marks, the board's frame,
 furniture, lamps and people. Output only the JSON array."""
 

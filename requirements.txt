@@ -8,10 +8,11 @@ numpy==2.5.4
 # Virtual camera output (uses OBS Virtual Camera on macOS)
 pyvirtualcam==0.15.0
 
-# OCR: handwritten text + math -> LaTeX with Qwen3-VL-8B, run locally via PyTorch + transformers.
-# Uses the Mac GPU (MPS), an NVIDIA GPU (CUDA) or the CPU. Needs ~18 GB of memory while running.
-# The model (~17 GB) downloads from Hugging Face on first run.
-# Replaced pix2text + texteller + TrOCR after a bake-off on tests/ocr (85% vs 62% exact).
+# OCR: handwritten text + math -> LaTeX with Qwen3-VL-8B.
+# On Apple Silicon Macs it runs 4-bit with MLX (~11 GB peak, model ~5 GB download); elsewhere with
+# PyTorch + transformers (NVIDIA GPU or CPU, ~25 GB peak, model ~17 GB). Models download on first run.
+# Replaced pix2text + texteller + TrOCR after a bake-off on tests/ocr (92% vs 62% exact).
+mlx-vlm==0.7.12; sys_platform == "darwin" and platform_machine == "arm64"
 torch
 transformers>=4.57
 pillow
