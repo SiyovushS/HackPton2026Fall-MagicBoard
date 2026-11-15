@@ -224,19 +224,25 @@ TROCR_MODEL = "microsoft/trocr-base-handwritten"  # "-large-" was ~2x slower and
 
 
 def find_answer_blank(crop_bgr):
-    """Find an answer blank ("2+2 = ____"): a long flat line in the right half, low down.
+    """Find an answer blank ("2+2 = ____"): a long flat line at the END of the writing, low down.
 
     Returns the blank's connected-component mask, or None. Short strokes like "=" or "-"
-    (under 12% of the width) and centred lines like a fraction bar don't qualify.
+    don't qualify, nor do centred lines like a fraction bar, nor a minus sign of the line
+    below caught in the margin (it isn't at the end of the writing).
     """
     h, w = crop_bgr.shape[:2]
     ink = cv2.morphologyEx(ink_mask(crop_bgr), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
     n, labels, stats, _ = cv2.connectedComponentsWithStats(ink, 8)
+    real = [i for i in range(1, n) if stats[i][cv2.CC_STAT_AREA] >= 15]   # ignore dust specks
+    if not real:
+        return None
+    ink_right = max(stats[i][0] + stats[i][2] for i in real)      # where the writing ends
     best = None
     for i in range(1, n):
         bx, by, bw, bh, _ = stats[i]
         flat = bw >= 4 * bh
-        if flat and bw >= 0.12 * w and bx >= 0.45 * w and by + bh / 2 >= 0.45 * h:
+        at_end = bx + bw >= ink_right - 0.05 * w                  # the blank finishes the line
+        if flat and at_end and bw >= 0.15 * w and bx >= 0.45 * w and by + bh / 2 >= 0.45 * h:
             if best is None or bw > stats[best][2]:
                 best = i
     return None if best is None else labels == best

@@ -11,3 +11,10 @@ live_captures/
 
 # Per-run OCR test results (re-create with: .venv/bin/python tests/ocr/eval_ocr.py --save NAME)
 tests/ocr/results/
+
+# Whole-board test results and debug pictures (re-create with tests/board/eval_board.py)
+tests/board/results/
+tests/board/pictures/
+
+# Test videos (large; keep out of git)
+recordings/

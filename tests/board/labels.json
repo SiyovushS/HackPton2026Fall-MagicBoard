@@ -1,0 +1,242 @@
+[
+  {
+    "id": "chalk_a_person_right",
+    "image": "images/chalk_a_person_right.jpg",
+    "source": "live_captures/20261114-232951_board.png",
+    "note": "webcam; house box; person at the right edge",
+    "boxes": [
+      {
+        "kind": "DEFINE",
+        "label": "house"
+      }
+    ],
+    "writing": [
+      {
+        "text": "ax^{2}+bx+c",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "(x-q_{0})(x-q_{1})",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\int_{a}^{b}4x^{2}dx",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "apple",
+        "kind": "text",
+        "role": "writing"
+      }
+    ]
+  },
+  {
+    "id": "chalk_b_turned_two_boxes",
+    "image": "images/chalk_b_turned_two_boxes.jpg",
+    "source": "live_captures/20261114-233023_board.png",
+    "note": "webcam turned left: an empty CALL box is visible too; the integral is cut off at the right edge (optional); person at the left",
+    "boxes": [
+      {
+        "kind": "DEFINE",
+        "label": "house"
+      },
+      {
+        "kind": "CALL",
+        "label": "house"
+      }
+    ],
+    "writing": [
+      {
+        "text": "ax^{2}+bx+c",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "(x-q_{0})(x-q_{1})",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\int_{a}^{b}4x^{2}dx",
+        "kind": "math",
+        "role": "writing",
+        "optional": true
+      },
+      {
+        "text": "apple",
+        "kind": "text",
+        "role": "writing"
+      }
+    ]
+  },
+  {
+    "id": "chalk_c_clean",
+    "image": "images/chalk_c_clean.jpg",
+    "source": "live_captures/20261114-233128_board.png",
+    "note": "webcam; clean sharp view",
+    "boxes": [
+      {
+        "kind": "DEFINE",
+        "label": "house"
+      }
+    ],
+    "writing": [
+      {
+        "text": "ax^{2}+bx+c",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "(x-q_{0})(x-q_{1})",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\int_{a}^{b}4x^{2}dx",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "apple",
+        "kind": "text",
+        "role": "writing"
+      }
+    ]
+  },
+  {
+    "id": "chalk_d_person_corner",
+    "image": "images/chalk_d_person_corner.jpg",
+    "source": "live_captures/20261114-235334_board.png",
+    "note": "webcam; person in the bottom-right corner",
+    "boxes": [
+      {
+        "kind": "DEFINE",
+        "label": "house"
+      }
+    ],
+    "writing": [
+      {
+        "text": "ax^{2}+bx+c",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "(x-q_{0})(x-q_{1})",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\int_{a}^{b}4x^{2}dx",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "apple",
+        "kind": "text",
+        "role": "writing"
+      }
+    ]
+  },
+  {
+    "id": "whiteboard_apple_boxes",
+    "image": "images/whiteboard_apple_boxes.jpg",
+    "source": "IMG_4968.HEIC (phone photo)",
+    "note": "glare across the top washes out parts of both box outlines",
+    "boxes": [
+      {
+        "kind": "DEFINE",
+        "label": "apple"
+      },
+      {
+        "kind": "CALL",
+        "label": "apple"
+      }
+    ],
+    "writing": [
+      {
+        "text": "2+2=",
+        "kind": "math",
+        "role": "autocomplete"
+      },
+      {
+        "text": "x^{2}+3=",
+        "kind": "math",
+        "role": "autocomplete"
+      },
+      {
+        "text": "x^{2}+2x+3",
+        "kind": "math",
+        "role": "graph"
+      },
+      {
+        "text": "Basic use case of this program",
+        "kind": "text",
+        "role": "writing"
+      },
+      {
+        "text": "x=\\leftarrow o\\rightarrow",
+        "kind": "math",
+        "role": "writing",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "id": "whiteboard_expressions",
+    "image": "images/whiteboard_expressions.jpg",
+    "source": "first board photo (phone, rotated upright)",
+    "note": "the fraction is hard for every model (sigma, rho, script L)",
+    "boxes": [],
+    "writing": [
+      {
+        "text": "\\sum\\frac{\\int_{0}^{\\infty}\\rho a\\,da}{\\mathcal{L}(x^{2})}",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\int\\sqrt{x^{2}+3}-x\\,dx",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "2+2",
+        "kind": "math",
+        "role": "writing"
+      },
+      {
+        "text": "\\ln(3)+\\log_{70}(40)",
+        "kind": "math",
+        "role": "writing"
+      }
+    ]
+  },
+  {
+    "id": "darcy_chalk_box_1",
+    "image": "images/darcy_chalk_box_1.jpg",
+    "source": "Darcy's output.mp4 (phone camera)",
+    "note": "one empty chalk box, no label",
+    "boxes": [
+      {
+        "kind": "CALL",
+        "label": null
+      }
+    ],
+    "writing": []
+  },
+  {
+    "id": "darcy_chalk_box_4",
+    "image": "images/darcy_chalk_box_4.jpg",
+    "source": "Darcy's output.mp4 (phone camera)",
+    "note": "one empty chalk box, no label",
+    "boxes": [
+      {
+        "kind": "CALL",
+        "label": null
+      }
+    ],
+    "writing": []
+  }
+]
