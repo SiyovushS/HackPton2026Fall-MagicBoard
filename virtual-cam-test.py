@@ -14,6 +14,18 @@ width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 dim = (height, width)
 
+class Image:
+    # image src will go here
+    pos = None
+    vel = np.empty((4, 2))
+    confidence = 0
+
+    def __init__(self):
+        pass
+
+images = []
+
+
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 out = cv2.VideoWriter("output.mp4", fourcc, 20.0, (width, height))
@@ -45,7 +57,8 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
         thresh = dilated_edges
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         cv2.drawContours(frame, contours, -1, (255, 0, 0), 1)
-        for c in contours:
+        rects = []
+        for (i, c) in enumerate(contours):
             if(len(c) < 4):
                 continue
 
@@ -57,7 +70,7 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
             area_factor = 1.2
             approx = None
             try:
-                # This function just fails sometimes...
+                # This function throws on degenerate cases
                 approx = cv2.approxPolyN(c, epsilon_percentage=area_factor - 1, nsides=4)
             except cv2.error:
                 print("Bad contour " + str(c))
@@ -71,9 +84,77 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
             if(area_factor < approx_area / area):
                 # why are you even here?
                 continue
+
+            rects.append(approx[0])
             cv2.drawContours(frame, [approx], -1, (0, 255, 0), 1)
 
-            dst_pos = np.float32(approx)
+#             dst_pos = np.float32(approx)
+#             trans = cv2.getPerspectiveTransform(
+#                 np.float32([
+#                     [0, 0],
+#                     [img_width, 0],
+#                     [img_width, img_height],
+#                     [0, img_height]
+#                 ]),
+#                 dst_pos,
+#             )
+#
+#             warped_img = cv2.warpPerspective(img, trans, (width, height))
+#
+#             mask = np.zeros((height, width), dtype=np.uint8)
+#             cv2.fillConvexPoly(mask, approx, 255)
+#             # cv2.fillConvexPoly(mask, approx.reshape(4, 2).astype(np.int32), 255)
+#             cv2.copyTo(warped_img, mask, frame)
+
+
+
+        rects_used = np.zeros(len(rects))
+        for i, image in enumerate(images[:]):
+            image.vel[:] *= 0.7
+
+            closest_rect_i = None
+            closest_dist = None
+            for (i, rect) in enumerate(rects):
+                diff = rect - image.pos
+                dist = np.sqrt(np.sum(np.pow(diff, 2))) / 4
+                max_dist = 128
+                if(dist < max_dist and (closest_rect_i == None or dist < closest_dist)):
+                    closest_rect_i = i
+                    closest_dist = dist
+
+            if(closest_rect_i is None):
+                image.confidence -= 1
+                if(image.confidence < 0):
+                    images.remove(image)
+
+            else:
+                closest_rect = rects[closest_rect_i]
+                rects_used[closest_rect_i] = 1
+                diff = closest_rect - image.pos
+
+                dist = np.sum(diff)
+
+                accel = 0.1
+                image.vel += accel * diff
+                image.confidence += 1
+                image.confidence = min(image.confidence, 32)
+
+            image.pos += image.vel
+
+
+
+        for i, used in enumerate(rects_used):
+            if(used):
+                continue
+
+            image = Image()
+            image.pos = rects[i].astype(np.float32)
+            image.confidence = 0
+            images.append(image)
+
+        for image in images:
+
+            dst_pos = np.float32(image.pos)
             trans = cv2.getPerspectiveTransform(
                 np.float32([
                     [0, 0],
@@ -87,7 +168,7 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
             warped_img = cv2.warpPerspective(img, trans, (width, height))
 
             mask = np.zeros((height, width), dtype=np.uint8)
-            cv2.fillConvexPoly(mask, approx, 255)
+            cv2.fillConvexPoly(mask, image.pos.astype(np.int32), 255)
             # cv2.fillConvexPoly(mask, approx.reshape(4, 2).astype(np.int32), 255)
             cv2.copyTo(warped_img, mask, frame)
 
