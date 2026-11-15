@@ -1,0 +1,106 @@
+[
+  {
+    "id": "fraction",
+    "image": "images/fraction.png",
+    "kind": "math",
+    "expected": "\\sum\\frac{\\int_{0}^{\\infty}\\rho a\\,da}{\\mathcal{L}(x^{2})}",
+    "source": "first board photo (rotated)",
+    "note": "hard: sigma, rho, script L"
+  },
+  {
+    "id": "integral",
+    "image": "images/integral.png",
+    "kind": "math",
+    "expected": "\\int\\sqrt{x^{2}+3}-x\\,dx",
+    "source": "first board photo (rotated)",
+    "note": ""
+  },
+  {
+    "id": "two_plus_two",
+    "image": "images/two_plus_two.png",
+    "kind": "math",
+    "expected": "2+2",
+    "source": "first board photo (rotated)",
+    "note": ""
+  },
+  {
+    "id": "ln_log_40",
+    "image": "images/ln_log_40.png",
+    "kind": "math",
+    "expected": "\\ln(3)+\\log_{70}(40)",
+    "source": "first board photo (rotated)",
+    "note": "subscript is 70 (confirmed)"
+  },
+  {
+    "id": "label_apple_define",
+    "image": "images/label_apple_define.png",
+    "kind": "text",
+    "expected": "apple",
+    "source": "IMG_4968.HEIC",
+    "note": "artifact label inside the 'define' box (box with apple drawing)"
+  },
+  {
+    "id": "label_apple_call",
+    "image": "images/label_apple_call.png",
+    "kind": "text",
+    "expected": "apple",
+    "source": "IMG_4968.HEIC",
+    "note": "artifact label inside the empty 'call' box"
+  },
+  {
+    "id": "two_plus_two_blank",
+    "image": "images/two_plus_two_blank.png",
+    "kind": "math",
+    "expected": "2+2=",
+    "source": "IMG_4968.HEIC",
+    "note": "autocomplete: blank line after = is the answer slot"
+  },
+  {
+    "id": "x2_plus_3_blank",
+    "image": "images/x2_plus_3_blank.png",
+    "kind": "math",
+    "expected": "x^{2}+3=",
+    "source": "IMG_4968.HEIC",
+    "note": "autocomplete: blank line after = is the answer slot"
+  },
+  {
+    "id": "text_basic_use_case",
+    "image": "images/text_basic_use_case.png",
+    "kind": "text",
+    "expected": "Basic use case of this",
+    "source": "IMG_4968.HEIC",
+    "note": ""
+  },
+  {
+    "id": "text_program",
+    "image": "images/text_program.png",
+    "kind": "text",
+    "expected": "program",
+    "source": "IMG_4968.HEIC",
+    "note": ""
+  },
+  {
+    "id": "two_line_text",
+    "image": "images/two_line_text.png",
+    "kind": "text",
+    "expected": "Basic use case of this program",
+    "source": "IMG_4968.HEIC",
+    "note": "two lines in one crop"
+  },
+  {
+    "id": "x2_2x_3",
+    "image": "images/x2_2x_3.png",
+    "kind": "math",
+    "expected": "x^{2}+2x+3",
+    "source": "IMG_4968.HEIC",
+    "note": "graph expression"
+  },
+  {
+    "id": "x2_2x_3_with_axes",
+    "image": "images/x2_2x_3_with_axes.png",
+    "kind": "math",
+    "expected": "x^{2}+2x+3",
+    "source": "IMG_4968.HEIC",
+    "note": "graph expression with the axes symbol in the crop"
+  }
+]

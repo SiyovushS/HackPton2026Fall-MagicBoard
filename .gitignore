@@ -1,0 +1,13 @@
+# Python virtual environment (recreate with: python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt)
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Webcam crops saved by live_ocr_test.py (personal photos; add good ones to tests/ocr instead)
+live_captures/
+
+# Per-run OCR test results (re-create with: .venv/bin/python tests/ocr/eval_ocr.py --save NAME)
+tests/ocr/results/
