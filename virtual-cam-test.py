@@ -7,6 +7,9 @@ import pyvirtualcam
 # Open the default camera
 cam = cv2.VideoCapture(0)
 
+img = cv2.imread("test.png")
+img_height, img_width, img_ch = img.shape
+
 width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 dim = (height, width)
@@ -33,7 +36,7 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
         if cv2.waitKey(1) == ord("j"):
             thresh_point -= 16
 
-        blurred = cv2.GaussianBlur(frame, (1, 1), 0)
+        blurred = cv2.GaussianBlur(frame, (5, 5), 0)
         edges = cv2.Canny(blurred, 20, 80)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
         dilated_edges = cv2.dilate(edges, kernel, iterations=1)
@@ -45,27 +48,51 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
         for c in contours:
             if(len(c) < 4):
                 continue
+
+            min_size = pow(64, 2)
             area = cv2.contourArea(c)
-            if(area < 16):
+            if(area < max(16, min_size)):
                 continue
+
+            area_factor = 1.2
+            approx = None
             try:
-                area_factor = 1.3
                 # This function just fails sometimes...
                 approx = cv2.approxPolyN(c, epsilon_percentage=area_factor - 1, nsides=4)
-                approx_area = cv2.contourArea(approx)
-                if(4 < approx.size / 2):
-                    continue
-
-                if(area_factor < approx_area / area):
-                    # why are you even here?
-                    continue
-                cv2.drawContours(frame, [approx], -1, (0, 255, 0), 1)
             except cv2.error:
                 print("Bad contour " + str(c))
+                continue
 
-        i = np.indices(dim)
-        brightness = np.sqrt(i[0]**2 + i[1]**2)
-        # frame[:] += np.stack([brightness, brightness, brightness], axis=-1).astype(np.uint8)
+
+            approx_area = cv2.contourArea(approx)
+            if(4 < approx.size / 2):
+                continue
+
+            if(area_factor < approx_area / area):
+                # why are you even here?
+                continue
+            cv2.drawContours(frame, [approx], -1, (0, 255, 0), 1)
+
+            dst_pos = np.float32(approx)
+            trans = cv2.getPerspectiveTransform(
+                np.float32([
+                    [0, 0],
+                    [img_width, 0],
+                    [img_width, img_height],
+                    [0, img_height]
+                ]),
+                dst_pos,
+            )
+
+            warped_img = cv2.warpPerspective(img, trans, (width, height))
+
+            mask = np.zeros((height, width), dtype=np.uint8)
+            cv2.fillConvexPoly(mask, approx, 255)
+            # cv2.fillConvexPoly(mask, approx.reshape(4, 2).astype(np.int32), 255)
+            cv2.copyTo(warped_img, mask, frame)
+
+
+
         virt_cam.send(frame)
         cv2.imshow("Thresh", thresh)
         cv2.imshow("Camera", frame)
