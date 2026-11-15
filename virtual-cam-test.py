@@ -6,8 +6,6 @@ import pyvirtualcam
 
 # Open the default camera
 cam = cv2.VideoCapture(0)
-print(cam)
-print(cam.read)
 
 width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -21,23 +19,61 @@ with pyvirtualcam.Camera(width=dim[1], height=dim[0], fps=20) as virt_cam:
     print(f"Using virtual camera: {virt_cam.device}")
     # frame = np.zeros((virt_cam.height, virt_cam.width, 3), np.uint8)  # RGB
 
+    thresh_point = 0
+
     while True:
         ret, frame = cam.read()
 
         # Write the frame to the output file
         out.write(frame)
 
-        # Display the captured frame
+        if cv2.waitKey(1) == ord("k"):
+            thresh_point += 16
+
+        if cv2.waitKey(1) == ord("j"):
+            thresh_point -= 16
+
+        blurred = cv2.GaussianBlur(frame, (1, 1), 0)
+        edges = cv2.Canny(blurred, 20, 80)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # _, thresh = cv2.threshold(gray, thresh_point, 255, cv2.THRESH_BINARY)
+        thresh = dilated_edges
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        cv2.drawContours(frame, contours, -1, (255, 0, 0), 1)
+        for c in contours:
+            if(len(c) < 4):
+                continue
+            area = cv2.contourArea(c)
+            if(area < 16):
+                continue
+            try:
+                area_factor = 1.3
+                # This function just fails sometimes...
+                approx = cv2.approxPolyN(c, epsilon_percentage=area_factor - 1, nsides=4)
+                approx_area = cv2.contourArea(approx)
+                if(4 < approx.size / 2):
+                    continue
+
+                if(area_factor < approx_area / area):
+                    # why are you even here?
+                    continue
+                cv2.drawContours(frame, [approx], -1, (0, 255, 0), 1)
+            except cv2.error:
+                print("Bad contour " + str(c))
+
+        i = np.indices(dim)
+        brightness = np.sqrt(i[0]**2 + i[1]**2)
+        # frame[:] += np.stack([brightness, brightness, brightness], axis=-1).astype(np.uint8)
+        virt_cam.send(frame)
+        cv2.imshow("Thresh", thresh)
         cv2.imshow("Camera", frame)
 
         # Press 'q' to exit the loop
         if cv2.waitKey(1) == ord("q"):
             break
 
-        i = np.indices(dim)
-        brightness = np.sqrt(i[0]**2 + i[1]**2)
-        frame[:] += np.stack([brightness, brightness, brightness], axis=-1).astype(np.uint8)
-        virt_cam.send(frame)
         virt_cam.sleep_until_next_frame()
 
 # Release the capture and writer objects
