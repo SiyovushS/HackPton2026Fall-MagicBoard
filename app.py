@@ -3,6 +3,7 @@
     .venv/bin/python app.py                            # webcam 0 -> window + OBS Virtual Camera (Zoom)
     .venv/bin/python app.py --no-vcam                  # window only
     .venv/bin/python app.py --video recordings/board_test.mov --out recordings/board_test_magic.mp4
+    .venv/bin/python app.py --image ~/Downloads/IMG_4971.HEIC   # one photo -> IMG_4971_magic.png next to it
 
 The board when the app starts is the "before" picture: only what is written after that is used.
 Boxes showing a saved drawing are tracked frame by frame (Darcy's method), so the drawing follows
@@ -340,6 +341,44 @@ def run_video(app, path, out_path, show):
     print(f"done: {i / fps:.0f}s of video in {time.time() - t0:.0f}s" + (f", saved {out_path}" if out_path else ""))
 
 
+def run_image(app, path, out_path=None, show=True):
+    """One photo instead of a camera: everything on the board counts as new, the usual analysis
+    runs (answers, graphs, saving and pasting drawings), and the result is saved and shown."""
+    import subprocess
+    import tempfile
+    from pathlib import Path
+    src = Path(path).expanduser()
+    if not src.exists():
+        raise SystemExit(f"No such image: {src}")
+    read_from = src
+    if src.suffix.lower() in (".heic", ".heif"):           # iPhone photos: OpenCV can't read HEIC
+        read_from = Path(tempfile.mkdtemp()) / (src.stem + ".png")
+        subprocess.run(["sips", "-s", "format", "png", str(src), "--out", str(read_from)],
+                       check=True, capture_output=True)
+    frame = cv2.imread(str(read_from))
+    if frame is None:
+        raise SystemExit(f"Could not read the image: {src}")
+    if max(frame.shape[:2]) > 1920:                        # camera-sized, like the live app
+        s = 1920 / max(frame.shape[:2])
+        frame = cv2.resize(frame, None, fx=s, fy=s, interpolation=cv2.INTER_AREA)
+    app.reset(all_new=True)
+    t0 = time.time()
+    for i in range(40):                                    # 20 s of a still "camera"
+        app.update(frame, i * 0.5, log=lambda m: print(m, flush=True) if not m.startswith("[waiting]") else None)
+        if app.reader.history and i * 0.5 - app.reader.history[-1].time > 3:
+            break
+    out = app.render(frame, app.people.mask(frame))
+    out_path = Path(out_path).expanduser() if out_path else src.with_name(src.stem + "_magic.png")
+    cv2.imwrite(str(out_path), out)
+    print(f"done in {time.time() - t0:.0f}s, saved {out_path}", flush=True)
+    if show:
+        h, w = out.shape[:2]
+        s = min(1.0, 1400 / w, 900 / h)
+        cv2.imshow("Magic Board (image) - press any key to close", cv2.resize(out, None, fx=s, fy=s))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
 def run_camera(app, index, vcam_on):
     from live_ocr_test import open_camera, sharpness
     cap = open_camera(index)
@@ -406,10 +445,11 @@ def run_camera(app, index, vcam_on):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--camera", type=int, default=0)
+    ap.add_argument("--image", help="run on one photo (png/jpg/heic) instead of the camera")
     ap.add_argument("--video", help="run on a recorded video instead of the camera")
-    ap.add_argument("--out", help="with --video: save the result to this video file")
+    ap.add_argument("--out", help="with --video/--image: where to save the result")
     ap.add_argument("--no-vcam", action="store_true", help="don't send to OBS Virtual Camera")
-    ap.add_argument("--no-window", action="store_true", help="with --video: don't show a window")
+    ap.add_argument("--no-window", action="store_true", help="with --video/--image: don't show a window")
     ap.add_argument("--debug", action="store_true", help="outline everything found")
     args = ap.parse_args()
 
@@ -419,7 +459,9 @@ def main():
     app.debug = args.debug
     print(f"Models ready in {time.time() - t:.0f}s ({engine.backend})", flush=True)
     try:
-        if args.video:
+        if args.image:
+            run_image(app, args.image, args.out, show=not args.no_window)
+        elif args.video:
             run_video(app, args.video, args.out, show=not args.no_window)
         else:
             run_camera(app, args.camera, vcam_on=not args.no_vcam)
